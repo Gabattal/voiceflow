@@ -10,61 +10,128 @@ export const MultiSelect = {
         console.log('MultiSelect extension render');
         console.log('Trace data:', trace);
 
-        const options = trace.payload;
+        // Récupérer les sections et le texte du bouton depuis le payload
+        const { sections, buttonText = 'Valider' } = trace.payload;
+
+        console.log(sections.length);
 
         const container = document.createElement('div');
         container.innerHTML = `
           <style>
-            .option-container { 
-                margin: 16px; 
-                display: flex; 
-                gap: 10px;
-                align-items: center;
-            }
-            
-            .option-container input[type="checkbox"]:checked + label {
-                background-color: #2e7ff1; 
+            .section-container {
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 20px;
                 color: white;
+            }
+            .option-container { 
+                display: flex; 
+                align-items: center;
+                margin: 8px 0;
             }
             .option-container input[type="checkbox"] {
                 height: 20px;
                 width: 20px;
                 border-radius: 30px;
+                margin-right: 10px;
             }
-            
             .option-container label {
-             cursor: pointer; font-size: 0.9em; 
-             background-color: rgba(0, 0, 0, 0.3); 
-             border-radius: 5px;
-             padding: 6px;
-             color: white;
-             user-select: none;
+                cursor: pointer; 
+                font-size: 0.9em; 
+                background-color: rgba(0, 0, 0, 0.3); 
+                border-radius: 5px;
+                padding: 6px;
+                color: white;
+                user-select: none;
             }
-            .submit-btn { background: #2e7ff1; color: white; padding: 10px; border-radius: 5px; cursor: pointer; border: none; }
+            .submit-btn {
+                background: #2e7ff1; 
+                color: white; 
+                padding: 10px; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                border: none;
+            }
+            .disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
           </style>
         `;
 
-        options.forEach(option => {
-            const optionDiv = document.createElement('div');
-            optionDiv.classList.add('option-container');
-            optionDiv.innerHTML = `<input type="checkbox" id="${option.name}" /> <label for="${option.name}">${option.name}</label>`;
-            container.appendChild(optionDiv);
+        // Création des sections avec les options
+        sections.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.classList.add('section-container');
+            sectionDiv.style.backgroundColor = section.color; // Applique la couleur de fond
+
+            const sectionLabel = document.createElement('h3');
+            sectionLabel.textContent = section.label;
+            sectionDiv.appendChild(sectionLabel);
+
+            section.options.forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('option-container');
+                optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
+
+                const checkbox = optionDiv.querySelector('input[type="checkbox"]');
+
+                // Ajouter un écouteur pour gérer les actions
+                checkbox.addEventListener('change', () => {
+                    if (option.action === "all" && checkbox.checked) {
+                        // Désactive toutes les autres cases dans cette section
+                        const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(cb => {
+                            if (cb !== checkbox) {
+                                cb.checked = false;
+                                cb.disabled = true;
+                                cb.parentNode.classList.add('disabled');
+                            }
+                        });
+                    } else if (option.action === "all" && !checkbox.checked) {
+                        // Réactive les autres cases si "all" est décoché
+                        const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(cb => {
+                            cb.disabled = false;
+                            cb.parentNode.classList.remove('disabled');
+                        });
+                    }
+                });
+
+                sectionDiv.appendChild(optionDiv);
+            });
+
+            container.appendChild(sectionDiv);
         });
 
+        // Ajouter le bouton de soumission avec le texte personnalisé
         const submitBtn = document.createElement('button');
         submitBtn.classList.add('submit-btn');
-        submitBtn.textContent = 'Valider';
+        submitBtn.textContent = buttonText;
 
         submitBtn.addEventListener('click', () => {
-            const selectedOptions = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(
-                checkbox => checkbox.nextElementSibling.innerText
-            );
+            // Récupérer les options sélectionnées
+            const selectedOptions = sections.map((section, index) => {
+                // Sélectionner uniquement les cases à cocher cochées dans cette section
+                const sectionElement = container.querySelectorAll('.section-container')[index];
+                const sectionSelections = Array.from(
+                    sectionElement.querySelectorAll('input[type="checkbox"]:checked')
+                ).map(checkbox => checkbox.nextElementSibling.innerText);
+
+                console.log('Section selections:', sectionSelections);
+
+                return { section: section.label, selections: sectionSelections };
+            }).filter(section => section.selections.length > 0);
+
 
             const jsonPayload = {
-                count: selectedOptions.length,
-                name: selectedOptions
+                count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
+                selections: selectedOptions,
+                buttonText: buttonText  // Inclure le texte du bouton dans le payload
             };
 
+            // Envoyer le JSON à Voiceflow
+            console.log(jsonPayload);
             window.voiceflow.chat.interact({
                 type: 'complete',
                 payload: JSON.stringify(jsonPayload),
