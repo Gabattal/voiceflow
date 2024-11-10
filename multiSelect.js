@@ -104,21 +104,16 @@ export const MultiSelect = {
             container.appendChild(sectionDiv);
         });
 
-        // Ajouter le bouton de soumission avec le texte personnalisé
         const submitBtn = document.createElement('button');
         submitBtn.classList.add('submit-btn');
         submitBtn.textContent = buttonText;
 
         submitBtn.addEventListener('click', () => {
-            // Récupérer les options sélectionnées
             const selectedOptions = sections.map((section, index) => {
-                // Sélectionner uniquement les cases à cocher cochées dans cette section
                 const sectionElement = container.querySelectorAll('.section-container')[index];
                 const sectionSelections = Array.from(
                     sectionElement.querySelectorAll('input[type="checkbox"]:checked')
                 ).map(checkbox => checkbox.nextElementSibling.innerText);
-
-                console.log('Section selections:', sectionSelections);
 
                 return { section: section.label, selections: sectionSelections };
             }).filter(section => section.selections.length > 0);
@@ -130,8 +125,6 @@ export const MultiSelect = {
                 buttonText: buttonText  // Inclure le texte du bouton dans le payload
             };
 
-            // Envoyer le JSON à Voiceflow
-            console.log(jsonPayload);
             window.voiceflow.chat.interact({
                 type: 'complete',
                 payload: JSON.stringify(jsonPayload),
