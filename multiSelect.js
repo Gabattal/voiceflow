@@ -10,15 +10,18 @@ export const MultiSelect = {
         console.log('MultiSelect extension render');
         console.log('Trace data:', trace);
 
-        // Récupérer les sections et le texte du bouton depuis le payload
-        const { sections, buttonText = 'Valider' } = trace.payload;
+        // Journaliser le payload pour vérifier sa structure
+        console.log('Payload:', trace.payload);
+
+        // Vérifier si `trace.payload` contient `sections` et si c'est un tableau
+        const { sections = [], buttonText = 'Valider' } = trace.payload;
 
         if (!Array.isArray(sections)) {
             console.error('Erreur : `sections` n\'est pas un tableau', sections);
             return;  // Arrêter l'exécution si sections n'est pas un tableau
         }
 
-        console.log(`Sections length: ${sections.length}`);
+        console.log(`Sections length: ${sections.length}`);  // Journaliser la longueur des sections
 
         const container = document.createElement('div');
         container.innerHTML = `
@@ -66,18 +69,19 @@ export const MultiSelect = {
 
         // Création des sections avec les options
         sections.forEach(section => {
-            console.log('Processing section:', section.label);
             const sectionDiv = document.createElement('div');
             sectionDiv.classList.add('section-container');
-            sectionDiv.style.backgroundColor = section.color; // Applique la couleur de fond
+            sectionDiv.style.backgroundColor = section.color;  // Applique la couleur de fond
 
             const sectionLabel = document.createElement('h3');
             sectionLabel.textContent = section.label;
             sectionDiv.appendChild(sectionLabel);
 
+            console.log('Section:', section);
+
             if (Array.isArray(section.options)) {
+                console.log('Options:', section.options);
                 section.options.forEach(option => {
-                    console.log('Processing option:', option.name);
                     const optionDiv = document.createElement('div');
                     optionDiv.classList.add('option-container');
                     optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
@@ -128,8 +132,6 @@ export const MultiSelect = {
 
                 return { section: section.label, selections: sectionSelections };
             }).filter(section => section.selections.length > 0);
-
-            console.log('Selected options:', selectedOptions);
 
             const jsonPayload = {
                 count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
