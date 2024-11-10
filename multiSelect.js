@@ -68,6 +68,7 @@ export const MultiSelect = {
         `;
 
         // Création des sections avec les options
+        const sectionsArray = Array.isArray(sections) ? sections : Array.from(sections);
         sections.forEach(section => {
             const sectionDiv = document.createElement('div');
             sectionDiv.classList.add('section-container');
@@ -82,6 +83,7 @@ export const MultiSelect = {
             if (Array.isArray(section.options)) {
                 console.log('Options:', section.options);
                 section.options.forEach(option => {
+                    console.log('Option:', option);
                     const optionDiv = document.createElement('div');
                     optionDiv.classList.add('option-container');
                     optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
