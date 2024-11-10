@@ -10,70 +10,107 @@ export const MultiSelect = {
         console.log('MultiSelect extension render');
         console.log('Trace data:', trace);
 
-        // Journaliser le payload pour vérifier la structure des données
-        console.log('Payload:', trace.payload);
+        // Récupérer les sections et le texte du bouton depuis le payload
+        const { sections, buttonText = 'Valider' } = trace.payload;
 
-        // Récupérer les sections et le texte du bouton depuis le payload avec une valeur par défaut
-        const { sections = [], buttonText = 'Valider' } = trace.payload;
-
-        // Vérifier si `sections` est un tableau
         if (!Array.isArray(sections)) {
             console.error('Erreur : `sections` n\'est pas un tableau', sections);
-            return;
+            return;  // Arrêter l'exécution si sections n'est pas un tableau
         }
 
-        // Loguer la longueur des sections pour vérifier
         console.log(`Sections length: ${sections.length}`);
 
         const container = document.createElement('div');
         container.innerHTML = `
           <style>
-            .section-container { padding: 10px; border-radius: 5px; margin-bottom: 20px; color: white; }
-            .option-container { display: flex; align-items: center; margin: 8px 0; }
-            .option-container input[type="checkbox"] { height: 20px; width: 20px; border-radius: 30px; margin-right: 10px; }
-            .option-container label { cursor: pointer; font-size: 0.9em; background-color: rgba(0, 0, 0, 0.3); border-radius: 5px; padding: 6px; color: white; user-select: none; }
-            .submit-btn { background: #2e7ff1; color: white; padding: 10px; border-radius: 5px; cursor: pointer; border: none; }
-            .disabled { opacity: 0.5; pointer-events: none; }
+            .section-container {
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                color: white;
+            }
+            .option-container { 
+                display: flex; 
+                align-items: center;
+                margin: 8px 0;
+            }
+            .option-container input[type="checkbox"] {
+                height: 20px;
+                width: 20px;
+                border-radius: 30px;
+                margin-right: 10px;
+            }
+            .option-container label {
+                cursor: pointer; 
+                font-size: 0.9em; 
+                background-color: rgba(0, 0, 0, 0.3); 
+                border-radius: 5px;
+                padding: 6px;
+                color: white;
+                user-select: none;
+            }
+            .submit-btn {
+                background: #2e7ff1; 
+                color: white; 
+                padding: 10px; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                border: none;
+            }
+            .disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
           </style>
         `;
 
         // Création des sections avec les options
         sections.forEach(section => {
+            console.log('Processing section:', section.label);
             const sectionDiv = document.createElement('div');
             sectionDiv.classList.add('section-container');
-            sectionDiv.style.backgroundColor = section.color;
+            sectionDiv.style.backgroundColor = section.color; // Applique la couleur de fond
 
             const sectionLabel = document.createElement('h3');
             sectionLabel.textContent = section.label;
             sectionDiv.appendChild(sectionLabel);
 
-            section.options.forEach(option => {
-                const optionDiv = document.createElement('div');
-                optionDiv.classList.add('option-container');
-                optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
+            if (Array.isArray(section.options)) {
+                section.options.forEach(option => {
+                    console.log('Processing option:', option.name);
+                    const optionDiv = document.createElement('div');
+                    optionDiv.classList.add('option-container');
+                    optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
 
-                const checkbox = optionDiv.querySelector('input[type="checkbox"]');
-                checkbox.addEventListener('change', () => {
-                    if (option.action === "all" && checkbox.checked) {
-                        const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
-                        checkboxes.forEach(cb => {
-                            if (cb !== checkbox) {
-                                cb.checked = false;
-                                cb.disabled = true;
-                                cb.parentNode.classList.add('disabled');
-                            }
-                        });
-                    } else if (option.action === "all" && !checkbox.checked) {
-                        const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
-                        checkboxes.forEach(cb => {
-                            cb.disabled = false;
-                            cb.parentNode.classList.remove('disabled');
-                        });
-                    }
+                    const checkbox = optionDiv.querySelector('input[type="checkbox"]');
+
+                    // Ajouter un écouteur pour gérer les actions
+                    checkbox.addEventListener('change', () => {
+                        if (option.action === "all" && checkbox.checked) {
+                            // Désactive toutes les autres cases dans cette section
+                            const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
+                            checkboxes.forEach(cb => {
+                                if (cb !== checkbox) {
+                                    cb.checked = false;
+                                    cb.disabled = true;
+                                    cb.parentNode.classList.add('disabled');
+                                }
+                            });
+                        } else if (option.action === "all" && !checkbox.checked) {
+                            // Réactive les autres cases si "all" est décoché
+                            const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
+                            checkboxes.forEach(cb => {
+                                cb.disabled = false;
+                                cb.parentNode.classList.remove('disabled');
+                            });
+                        }
+                    });
+
+                    sectionDiv.appendChild(optionDiv);
                 });
-
-                sectionDiv.appendChild(optionDiv);
-            });
+            } else {
+                console.error('Erreur : `options` n\'est pas un tableau dans la section', section);
+            }
 
             container.appendChild(sectionDiv);
         });
@@ -92,10 +129,12 @@ export const MultiSelect = {
                 return { section: section.label, selections: sectionSelections };
             }).filter(section => section.selections.length > 0);
 
+            console.log('Selected options:', selectedOptions);
+
             const jsonPayload = {
                 count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
                 selections: selectedOptions,
-                buttonText: buttonText
+                buttonText: buttonText  // Inclure le texte du bouton dans le payload
             };
 
             window.voiceflow.chat.interact({
