@@ -9,12 +9,12 @@
 <body>
 <h1>Test Voiceflow Chat avec MultiSelect</h1>
 <script type="module">
-    import { MultiSelect } from './multiSelect.js';
+    import { MultiSelect } from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow/multiSelect.js';
     (function(d, t) {
         var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function() {
             window.voiceflow.chat.load({
-                verify: { projectID: '672e11893551fb09b4fc0d16' },
+                verify: { projectID: "PROJECT_ID" },
                 url: 'https://general-runtime.voiceflow.com',
                 versionID: 'production',
                 assistant: {
