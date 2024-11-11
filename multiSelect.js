@@ -4,7 +4,7 @@ export const MultiSelect = {
     match: ({ trace }) => {
         console.log('Checking match for multi_select');
         console.log(trace);
-        return trace.type === 'multi_select' && trace.payload;
+        return trace.payload && trace.payload.name === 'multi_select';
     },
     render: ({ trace, element }) => {
         try {
