@@ -2,24 +2,18 @@ export const MultiSelect = {
     name: 'MultiSelect',
     type: 'response',
     match: ({ trace }) => {
-        console.log('Checking match for multi_select');
-        console.log(trace);
-        return trace.payload && trace.payload.name === 'multi_select';
+        return trace.payload && trace.type === 'multi_select';
     },
     render: ({ trace, element }) => {
         try {
-            console.log('MultiSelect extension render v2');
-            console.log('Trace data:', trace);
+            // Récupérer les données depuis le payload
+            const { sections = [], buttonText = 'Valider', buttonColor = '#2e7ff1', textColor = '#FFFFFF', backgroundOpacity = 0.3 } = trace.payload;
 
-            // Vérifier la présence de sections et buttonText dans le payload
-            const { sections = [], buttonText = 'Valider' } = trace.payload;
-
+            // Vérifier que sections est un tableau
             if (!Array.isArray(sections)) {
                 console.error('Erreur : `sections` n\'est pas un tableau', sections);
-                return;  // Arrêter l'exécution si sections n'est pas un tableau
+                return;
             }
-
-            console.log(`Sections length: ${sections.length}`);  // Journaliser la longueur des sections
 
             const container = document.createElement('div');
             container.innerHTML = `
@@ -28,7 +22,6 @@ export const MultiSelect = {
                         padding: 10px;
                         border-radius: 5px;
                         margin-bottom: 20px;
-                        color: white;
                     }
                     .option-container { 
                         display: flex; 
@@ -43,19 +36,19 @@ export const MultiSelect = {
                     }
                     .option-container label {
                         cursor: pointer; 
-                        font-size: 0.9em; 
-                        background-color: rgba(0, 0, 0, 0.3); 
+                        font-size: 0.9em;
                         border-radius: 5px;
                         padding: 6px;
-                        color: white;
+                        color: ${textColor}; /* Utiliser la couleur du texte depuis JSON */
+                        background-color: rgba(0, 0, 0, ${backgroundOpacity}); /* Utiliser l'opacité depuis JSON */
                         user-select: none;
                     }
                     .submit-btn {
-                        background: #2e7ff1; 
-                        color: white; 
-                        padding: 10px; 
-                        border-radius: 5px; 
-                        cursor: pointer; 
+                        background: ${buttonColor}; /* Utiliser la couleur du bouton depuis JSON */
+                        color: white;
+                        padding: 10px;
+                        border-radius: 5px;
+                        cursor: pointer;
                         border: none;
                     }
                     .disabled {
@@ -75,19 +68,15 @@ export const MultiSelect = {
                 sectionLabel.textContent = section.label;
                 sectionDiv.appendChild(sectionLabel);
 
-                console.log('Section:', section);
-
                 if (Array.isArray(section.options)) {
-                    console.log('Options:', section.options);
                     section.options.forEach(option => {
-                        console.log('Option:', option);
                         const optionDiv = document.createElement('div');
                         optionDiv.classList.add('option-container');
                         optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
 
                         const checkbox = optionDiv.querySelector('input[type="checkbox"]');
 
-                        // Ajouter un écouteur pour gérer les actions
+                        // Gérer les actions sur les options
                         checkbox.addEventListener('change', () => {
                             if (option.action === "all" && checkbox.checked) {
                                 // Désactive toutes les autres cases dans cette section
@@ -118,6 +107,7 @@ export const MultiSelect = {
                 container.appendChild(sectionDiv);
             });
 
+            // Créer et configurer le bouton de soumission
             const submitBtn = document.createElement('button');
             submitBtn.classList.add('submit-btn');
             submitBtn.textContent = buttonText;
@@ -135,7 +125,7 @@ export const MultiSelect = {
                 const jsonPayload = {
                     count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
                     selections: selectedOptions,
-                    buttonText: buttonText  // Inclure le texte du bouton dans le payload
+                    buttonText: buttonText
                 };
 
                 window.voiceflow.chat.interact({
