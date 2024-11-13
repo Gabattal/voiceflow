@@ -13,6 +13,7 @@ export const FileUpload = {
 
             // Generate unique ID for this instance
             const uniqueId = 'fileUpload_' + Date.now();
+            console.log(`File upload id: ${uniqueId}`);
 
             const container = document.createElement('div');
             container.innerHTML = `
@@ -109,7 +110,7 @@ export const FileUpload = {
                                 type: 'complete',
                                 payload: JSON.stringify({
                                     success: true,
-                                    url: data.url,
+                                    url: data.url
                                 }),
                             });
                         }
@@ -128,7 +129,7 @@ export const FileUpload = {
                         type: 'complete',
                         payload: JSON.stringify({
                             success: false,
-                            error: error.message,
+                            error: error.message
                         }),
                     });
                 }
