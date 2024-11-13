@@ -4,12 +4,15 @@ export const FileUpload = {
     match: ({ trace }) => {
         console.log('Checking match for file_upload');
         console.log(trace);
-        return trace.payload && trace.payload.name === 'file_upload' ;
+        return trace.payload && trace.payload.name === 'file_upload';
     },
     render: ({ trace, element }) => {
         try {
             console.log('FileUpload extension render');
             console.log('Trace data:', trace);
+
+            // Generate unique ID for this instance
+            const uniqueId = 'fileUpload_' + Date.now();
 
             const container = document.createElement('div');
             container.innerHTML = `
@@ -58,8 +61,8 @@ export const FileUpload = {
                     }
                 </style>
                 <div class="upload-container">
-                    <input type="file" class="upload-input" id="fileUpload">
-                    <label for="fileUpload" class="upload-label">
+                    <input type="file" class="upload-input" id="${uniqueId}">
+                    <label for="${uniqueId}" class="upload-label">
                         Cliquer pour téléverser ou glisser-déposer un fichier
                     </label>
                 </div>
@@ -106,7 +109,7 @@ export const FileUpload = {
                                 type: 'complete',
                                 payload: JSON.stringify({
                                     success: true,
-                                    url: data.url
+                                    url: data.url,
                                 }),
                             });
                         }
@@ -125,7 +128,7 @@ export const FileUpload = {
                         type: 'complete',
                         payload: JSON.stringify({
                             success: false,
-                            error: error.message
+                            error: error.message,
                         }),
                     });
                 }
