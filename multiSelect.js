@@ -55,6 +55,10 @@ export const MultiSelect = {
                         opacity: 0.5;
                         pointer-events: none;
                     }
+                    
+                    .title {
+                        color: ${textColor} !important;
+                    }
                 </style>
             `;
 
@@ -65,6 +69,7 @@ export const MultiSelect = {
                 sectionDiv.style.backgroundColor = section.color;
 
                 const sectionLabel = document.createElement('h3');
+                sectionLabel.classList.add('title');
                 sectionLabel.textContent = section.label;
                 sectionDiv.appendChild(sectionLabel);
 
