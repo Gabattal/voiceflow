@@ -170,7 +170,6 @@ export const MultiSelect = {
 
                 noneButtonElement.addEventListener('click', () => {
 
-                    console.log(jsonPayload);
                     window.voiceflow.chat.interact({
                         type: 'complete',
                         payload: JSON.stringify({
