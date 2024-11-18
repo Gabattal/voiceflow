@@ -8,7 +8,7 @@ export const MultiSelect = {
         try {
             // Récupérer les données depuis le payload
             console.log(trace.payload);
-            const { sections = [], buttonText = 'Valider', buttonColor = '#2e7ff1', textColor = '#FFFFFF', backgroundOpacity = 0.3, noneButton = false } = trace.payload;
+            const { sections = [], buttonText = 'Valider', buttonColor = '#2e7ff1', textColor = '#FFFFFF', backgroundOpacity = 0.3, noneButton = false, index = 1 } = trace.payload;
 
             // Vérifier que sections est un tableau
             if (!Array.isArray(sections)) {
@@ -88,7 +88,7 @@ export const MultiSelect = {
                     section.options.forEach(option => {
                         const optionDiv = document.createElement('div');
                         optionDiv.classList.add('option-container');
-                        optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}" /> <label for="${section.label}-${option.name}">${option.name}</label>`;
+                        optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}-${index}" /> <label for="${section.label}-${option.name}-${index}">${option.name}</label>`;
 
                         const checkbox = optionDiv.querySelector('input[type="checkbox"]');
 
