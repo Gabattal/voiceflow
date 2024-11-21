@@ -97,13 +97,26 @@ export const MultiSelect = {
 
                         const input = optionDiv.querySelector(`input[type="${multiselect ? 'checkbox' : 'radio'}"]`);
 
-                        // Gestion de la sélection et limitation par maxSelect
+                        // Gestion de la sélection et des actions spéciales
                         input.addEventListener('change', () => {
                             const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
                             const checkedCount = Array.from(allCheckboxes).filter(checkbox => checkbox.checked).length;
 
-                            if (checkedCount >= maxSelect) {
-                                // Désactiver les cases non cochées
+                            if (option.action === 'all' && input.checked) {
+                                // Désactiver et décocher toutes les autres cases
+                                allCheckboxes.forEach(checkbox => {
+                                    if (checkbox !== input) {
+                                        checkbox.disabled = true;
+                                        checkbox.checked = false;
+                                    }
+                                });
+                            } else if (option.action === 'all' && !input.checked) {
+                                // Réactiver toutes les cases si décoché
+                                allCheckboxes.forEach(checkbox => {
+                                    checkbox.disabled = false;
+                                });
+                            } else if (checkedCount >= maxSelect) {
+                                // Limitation par maxSelect
                                 allCheckboxes.forEach(checkbox => {
                                     if (!checkbox.checked) {
                                         checkbox.disabled = true;
@@ -182,7 +195,6 @@ export const MultiSelect = {
                         const currentContainer = container.querySelector(`[data-index="${index}"]`);
                         if (currentContainer) {
                             const allButtons = currentContainer.querySelectorAll('.submit-btn');
-                            console.log(allButtons);
                             allButtons.forEach(btn => (btn.style.display = 'none'));
                         } else {
                             console.error(`Conteneur avec data-index="${index}" introuvable.`);
