@@ -8,7 +8,16 @@ export const MultiSelect = {
         try {
             // Récupérer les données depuis le payload
             console.log(trace.payload);
-            const { sections = [], buttonText = 'Valider', buttonColor = '#2e7ff1', textColor = '#FFFFFF', backgroundOpacity = 0.3, noneButton = false, index = 1 } = trace.payload;
+            const {
+                sections = [],
+                buttons = [],
+                buttonColor = '#4CAF50',
+                textColor = '#0000FF',
+                backgroundOpacity = 0.3,
+                index = 1,
+                multiselect = true,
+                maxSelect = 200
+            } = trace.payload;
 
             // Vérifier que sections est un tableau
             if (!Array.isArray(sections)) {
@@ -18,60 +27,48 @@ export const MultiSelect = {
 
             const container = document.createElement('div');
             container.innerHTML = `
-                <style>
-                    .section-container {
-                        padding: 10px;
-                        border-radius: 5px;
-                        margin-bottom: 20px;
-                    }
-                    .option-container { 
-                        display: flex; 
-                        align-items: center;
-                        margin: 8px 0;
-                    }
-                    .option-container input[type="checkbox"] {
-                        height: 20px;
-                        width: 20px;
-                        border-radius: 30px;
-                        margin-right: 10px;
-                    }
-                    .option-container label {
-                        cursor: pointer; 
-                        font-size: 0.9em;
-                        border-radius: 5px;
-                        padding: 6px;
-                        color: ${textColor};
-                        background-color: rgba(0, 0, 0, ${backgroundOpacity});
-                        user-select: none;
-                    }
-                    .submit-btn {
-                        background: ${buttonColor};
-                        color: white;
-                        padding: 10px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        border: none;
-                    }
-                    .submit-btn:hover {
-                        opacity: 0.8;
-                    }
-                    .none-button {
-                        background-color: ${buttonColor};
-                        color: white;
-                        padding: 10px;
-                        margin-left: 10px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        border: none;
-                    }
-                    .none-button:hover {
-                        opacity: 0.8;
-                    }
-                    .title {
-                        color: ${textColor} !important;
-                    }
-                </style>
-            `;
+            <style>
+                .section-container {
+                    padding: 10px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;
+                }
+                .option-container { 
+                    display: flex; 
+                    align-items: center;
+                    margin: 8px 0;
+                }
+                .option-container input[type="checkbox"] {
+                    height: 20px;
+                    width: 20px;
+                    border-radius: 30px;
+                    margin-right: 10px;
+                }
+                .option-container label {
+                    cursor: pointer; 
+                    font-size: 0.9em;
+                    border-radius: 5px;
+                    padding: 6px;
+                    color: ${textColor};
+                    background-color: rgba(0, 0, 0, ${backgroundOpacity});
+                    user-select: none;
+                }
+                .submit-btn {
+                    background: ${buttonColor};
+                    color: white;
+                    padding: 10px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    border: none;
+                }
+                .submit-btn:hover {
+                    opacity: 0.8;
+                }
+                .title {
+                    color: ${textColor} !important;
+                }
+            </style>
+        `;
 
             // Création des sections avec les options
             sections.forEach(section => {
@@ -88,25 +85,50 @@ export const MultiSelect = {
                     section.options.forEach(option => {
                         const optionDiv = document.createElement('div');
                         optionDiv.classList.add('option-container');
-                        optionDiv.innerHTML = `<input type="checkbox" id="${section.label}-${option.name}-${index}" /> <label for="${section.label}-${option.name}-${index}">${option.name}</label>`;
+                        optionDiv.innerHTML = `
+                            <input
+                                type="${multiselect ? 'checkbox' : 'radio'}" 
+                                style="display: ${multiselect ? 'block' : 'none'}" 
+                                name="option-${index}" 
+                                id="${section.label}-${option.name}-${index}" 
+                            />
+                            <label for="${section.label}-${option.name}-${index}">${option.name}</label>
+                        `;
 
-                        const checkbox = optionDiv.querySelector('input[type="checkbox"]');
+                        const input = optionDiv.querySelector(`input[type="${multiselect ? 'checkbox' : 'radio'}"]`);
 
-                        checkbox.addEventListener('change', () => {
-                            if (option.action === "all" && checkbox.checked) {
-                                const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
-                                checkboxes.forEach(cb => {
-                                    if (cb !== checkbox) {
-                                        cb.checked = false;
-                                        cb.disabled = true;
-                                        cb.parentNode.classList.add('disabled');
+                        // Gestion de la sélection et limitation par maxSelect
+                        input.addEventListener('change', () => {
+                            const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                            const checkedCount = Array.from(allCheckboxes).filter(checkbox => checkbox.checked).length;
+
+                            if (checkedCount >= maxSelect) {
+                                // Désactiver les cases non cochées
+                                allCheckboxes.forEach(checkbox => {
+                                    if (!checkbox.checked) {
+                                        checkbox.disabled = true;
                                     }
                                 });
-                            } else if (option.action === "all" && !checkbox.checked) {
-                                const checkboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
-                                checkboxes.forEach(cb => {
-                                    cb.disabled = false;
-                                    cb.parentNode.classList.remove('disabled');
+                            } else {
+                                // Réactiver toutes les cases si limite non atteinte
+                                allCheckboxes.forEach(checkbox => {
+                                    checkbox.disabled = false;
+                                });
+                            }
+
+                            // Envoi immédiat pour sélection unique
+                            if (!multiselect) {
+                                const selectedOption = {
+                                    section: section.label,
+                                    selections: [option.name],
+                                };
+                                console.log('Option sélectionnée, données envoyées');
+                                window.voiceflow.chat.interact({
+                                    type: 'complete',
+                                    payload: JSON.stringify({
+                                        count: 1,
+                                        selections: [selectedOption],
+                                    }),
                                 });
                             }
                         });
@@ -120,69 +142,67 @@ export const MultiSelect = {
                 container.appendChild(sectionDiv);
             });
 
-            // Créer et configurer le bouton principal
-            const submitBtn = document.createElement('button');
-            submitBtn.classList.add('submit-btn');
-            submitBtn.textContent = buttonText;
+            // Si `multiselect` est vrai, ajoutez les boutons
+            if (multiselect) {
+                // Créer un conteneur pour les boutons
+                const buttonContainer = document.createElement('div');
+                buttonContainer.setAttribute('data-index', index); // Ajouter un attribut pour identifier ce conteneur
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'center'; // Centre les boutons
+                buttonContainer.style.gap = '10px'; // Espacement entre les boutons
+                buttonContainer.style.marginTop = '20px'; // Marges au-dessus du conteneur
 
-            container.appendChild(submitBtn);
+                // Parcourir les boutons définis dans le payload
+                buttons.forEach(button => {
+                    const buttonElement = document.createElement('button');
+                    buttonElement.classList.add('submit-btn');
+                    buttonElement.textContent = button.text; // Texte du bouton
 
-            submitBtn.addEventListener('click', () => {
-                const selectedOptions = sections.map((section, index) => {
-                    const sectionElement = container.querySelectorAll('.section-container')[index];
-                    const sectionSelections = Array.from(
-                        sectionElement.querySelectorAll('input[type="checkbox"]:checked')
-                    ).map(checkbox => checkbox.nextElementSibling.innerText);
+                    // Ajouter un événement "click" pour chaque bouton
+                    buttonElement.addEventListener('click', () => {
+                        const selectedOptions = sections.map((section, idx) => {
+                            const sectionElement = container.querySelectorAll('.section-container')[idx];
+                            const sectionSelections = Array.from(
+                                sectionElement.querySelectorAll('input[type="checkbox"]:checked')
+                            ).map(checkbox => checkbox.nextElementSibling.innerText);
 
-                    return { section: section.label, selections: sectionSelections };
-                }).filter(section => section.selections.length > 0);
+                            return { section: section.label, selections: sectionSelections };
+                        }).filter(section => section.selections.length > 0);
 
-                if (selectedOptions.length === 0) {
-                    console.log('Aucune sélection effectuée');
-                    window.voiceflow.chat.interact({
-                        type: 'complete',
-                        payload: JSON.stringify({
-                            count: 0,
-                        }),
+                        // Construire le payload avec le path associé au bouton cliqué
+                        const jsonPayload = {
+                            count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
+                            selections: selectedOptions,
+                            path: button.path, // Récupérer le path du bouton
+                        };
+
+                        console.log(`Bouton "${button.text}" cliqué, sélections envoyées`);
+
+                        // Masquer tous les boutons dans ce conteneur
+                        const currentContainer = container.querySelector(`[data-index="${index}"]`);
+                        if (currentContainer) {
+                            const allButtons = currentContainer.querySelectorAll('.submit-btn');
+                            console.log(allButtons);
+                            allButtons.forEach(btn => (btn.style.display = 'none'));
+                        } else {
+                            console.error(`Conteneur avec data-index="${index}" introuvable.`);
+                        }
+
+                        window.voiceflow.chat.interact({
+                            type: 'complete',
+                            payload: JSON.stringify(jsonPayload),
+                        });
                     });
-                    return;
-                }
 
-                const jsonPayload = {
-                    count: selectedOptions.reduce((sum, section) => sum + section.selections.length, 0),
-                    selections: selectedOptions,
-                };
-
-                console.log('Bouton principal cliqué, sélections envoyées');
-                window.voiceflow.chat.interact({
-                    type: 'complete',
-                    payload: JSON.stringify(jsonPayload),
-                });
-            });
-
-            // Bouton "Aucun" (si `noneButton` est activé)
-            if (noneButton) {
-                const noneButtonElement = document.createElement('button');
-                noneButtonElement.classList.add('none-button');
-                noneButtonElement.textContent = 'Aucun';
-
-
-
-                noneButtonElement.addEventListener('click', () => {
-
-                    window.voiceflow.chat.interact({
-                        type: 'complete',
-                        payload: JSON.stringify({
-                            count: 0,
-                        }),
-                    });
+                    // Ajouter le bouton au conteneur des boutons
+                    buttonContainer.appendChild(buttonElement);
                 });
 
-                container.appendChild(noneButtonElement);
+                // Ajouter le conteneur des boutons au conteneur principal
+                container.appendChild(buttonContainer);
             }
 
             element.appendChild(container);
-
         } catch (error) {
             console.error('Erreur lors du rendu de MultiSelect:', error);
         }
