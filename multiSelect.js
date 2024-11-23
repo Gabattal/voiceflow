@@ -15,8 +15,7 @@ export const MultiSelect = {
                 textColor = '#0000FF',
                 backgroundOpacity = 0.3,
                 index = 1,
-                multiselect = true,
-                maxSelect = 200
+                multiselect = true
             } = trace.payload;
 
             // Vérifier que sections est un tableau
@@ -71,7 +70,8 @@ export const MultiSelect = {
         `;
 
             // Création des sections avec les options
-            sections.forEach(section => {
+            sections.forEach((section, sectionIndex) => {
+                const { maxSelect = 200 } = section; // Définir maxSelect pour chaque section
                 const sectionDiv = document.createElement('div');
                 sectionDiv.classList.add('section-container');
                 sectionDiv.style.backgroundColor = section.color;
@@ -90,20 +90,20 @@ export const MultiSelect = {
                                 type="${multiselect ? 'checkbox' : 'radio'}" 
                                 style="display: ${multiselect ? 'block' : 'none'}" 
                                 name="option-${index}" 
-                                id="${section.label}-${option.name}-${index}" 
+                                id="${section.label}-${option.name}-${sectionIndex}" 
                             />
-                            <label for="${section.label}-${option.name}-${index}">${option.name}</label>
+                            <label for="${section.label}-${option.name}-${sectionIndex}">${option.name}</label>
                         `;
 
                         const input = optionDiv.querySelector(`input[type="${multiselect ? 'checkbox' : 'radio'}"]`);
 
                         // Gestion de la sélection et des actions spéciales
                         input.addEventListener('change', () => {
-                            const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                            const allCheckboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
                             const checkedCount = Array.from(allCheckboxes).filter(checkbox => checkbox.checked).length;
 
                             if (option.action === 'all' && input.checked) {
-                                // Désactiver et décocher toutes les autres cases
+                                // Désactiver et décocher toutes les autres cases dans cette section
                                 allCheckboxes.forEach(checkbox => {
                                     if (checkbox !== input) {
                                         checkbox.disabled = true;
@@ -111,19 +111,19 @@ export const MultiSelect = {
                                     }
                                 });
                             } else if (option.action === 'all' && !input.checked) {
-                                // Réactiver toutes les cases si décoché
+                                // Réactiver toutes les cases de cette section si décoché
                                 allCheckboxes.forEach(checkbox => {
                                     checkbox.disabled = false;
                                 });
                             } else if (checkedCount >= maxSelect) {
-                                // Limitation par maxSelect
+                                // Limitation par maxSelect dans cette section
                                 allCheckboxes.forEach(checkbox => {
                                     if (!checkbox.checked) {
                                         checkbox.disabled = true;
                                     }
                                 });
                             } else {
-                                // Réactiver toutes les cases si limite non atteinte
+                                // Réactiver toutes les cases de cette section si limite non atteinte
                                 allCheckboxes.forEach(checkbox => {
                                     checkbox.disabled = false;
                                 });
