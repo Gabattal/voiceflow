@@ -15,8 +15,8 @@ export const MultiSelect = {
                 textColor = '#0000FF',
                 backgroundOpacity = 0.3,
                 index = 1,
-                multiselect = true,
                 totalMaxSelect = 0,
+                multiselect = true,
             } = trace.payload;
 
             let totalChecked = 0;
@@ -65,6 +65,11 @@ export const MultiSelect = {
                     width: 20px;
                     border-radius: 30px;
                     margin-right: 10px;
+                }
+                 .active-btn {
+                    background: ${textColor}; /* Inversez les couleurs */
+                    color: ${buttonColor};
+                    border: 2px solid ${buttonColor}; /* Ajoutez une bordure */
                 }
                 .option-container label {
                     cursor: pointer; 
@@ -157,11 +162,15 @@ export const MultiSelect = {
 
                             // Envoi immédiat pour sélection unique
                             if (!multiselect) {
+
+                                //log button selected
                                 const selectedOption = {
                                     section: section.label,
                                     selections: [option.name],
                                 };
-                                console.log('Option sélectionnée, données envoyées');
+
+                                input.labels[0].style.backgroundColor = textColor;
+                                input.labels[0].style.color = buttonColor;
                                 window.voiceflow.chat.interact({
                                     type: 'complete',
                                     payload: JSON.stringify({
