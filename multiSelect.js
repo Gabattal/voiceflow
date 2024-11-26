@@ -16,7 +16,7 @@ export const MultiSelect = {
                 backgroundOpacity = 0.3,
                 index = 1,
                 multiselect = true,
-                totalMaxSelect = 3,
+                totalMaxSelect = 0,
             } = trace.payload;
 
             let totalChecked = 0;
