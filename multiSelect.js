@@ -15,8 +15,31 @@ export const MultiSelect = {
                 textColor = '#0000FF',
                 backgroundOpacity = 0.3,
                 index = 1,
-                multiselect = true
+                multiselect = true,
+                totalMaxSelect = 3,
             } = trace.payload;
+
+            let totalChecked = 0;
+
+            const updateTotalChecked = () => {
+                totalChecked = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).length;
+
+                // Désactiver les cases non cochées si la limite globale est atteinte
+                if (totalMaxSelect > 0 && totalChecked >= totalMaxSelect) {
+                    Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+                        if (!checkbox.checked) {
+                            checkbox.disabled = true;
+                        }
+                    });
+                } else {
+                    // Réactiver les cases si la limite globale n'est pas atteinte
+                    if(totalMaxSelect > 0) {
+                        Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+                            checkbox.disabled = false;
+                        });
+                    }
+                }
+            };
 
             // Vérifier que sections est un tableau
             if (!Array.isArray(sections)) {
@@ -99,6 +122,7 @@ export const MultiSelect = {
 
                         // Gestion de la sélection et des actions spéciales
                         input.addEventListener('change', () => {
+                            updateTotalChecked();
                             const allCheckboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
                             const checkedCount = Array.from(allCheckboxes).filter(checkbox => checkbox.checked).length;
 
@@ -115,7 +139,7 @@ export const MultiSelect = {
                                 allCheckboxes.forEach(checkbox => {
                                     checkbox.disabled = false;
                                 });
-                            } else if (checkedCount >= maxSelect) {
+                            } else if (checkedCount >= maxSelect && totalMaxSelect === 0) {
                                 // Limitation par maxSelect dans cette section
                                 allCheckboxes.forEach(checkbox => {
                                     if (!checkbox.checked) {
@@ -124,9 +148,11 @@ export const MultiSelect = {
                                 });
                             } else {
                                 // Réactiver toutes les cases de cette section si limite non atteinte
-                                allCheckboxes.forEach(checkbox => {
-                                    checkbox.disabled = false;
-                                });
+                                if(totalMaxSelect === 0) {
+                                    allCheckboxes.forEach(checkbox => {
+                                        checkbox.disabled = false;
+                                    });
+                                }
                             }
 
                             // Envoi immédiat pour sélection unique
