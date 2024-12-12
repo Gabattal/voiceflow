@@ -7,7 +7,6 @@ export const MultiSelect = {
     render: ({trace, element}) => {
         try {
             // Récupérer les données depuis le payload
-            console.log(trace.payload);
             const {
                 sections = [],
                 buttons = [],
@@ -46,18 +45,17 @@ export const MultiSelect = {
             const updateTotalChecked = () => {
                 const details = getCheckedDetails(container);
                 totalChecked = 0;
+
+                // Calculer le nombre total de cases cochées dans toutes les sections
                 details.forEach((detail) => {
-                    console.log(detail);
                     if (detail.checkedAll.length > 0) {
-                        totalChecked += detail.sectionSize;
+                        totalChecked += detail.sectionSize; // Si "all" est coché, toutes les cases de la section sont comptées
                     } else {
-                        totalChecked += detail.checkedNormal.length
+                        totalChecked += detail.checkedNormal.length; // Sinon, seules les cases normales cochées sont comptées
                     }
                 });
 
-                console.log("total checked", totalChecked);
-
-                // Désactiver les cases non cochées si la limite globale est atteinte
+                // Désactiver toutes les cases non cochées si la limite globale est atteinte
                 if (totalMaxSelect > 0 && totalChecked >= totalMaxSelect) {
                     Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
                         if (!checkbox.checked) {
@@ -66,55 +64,57 @@ export const MultiSelect = {
                     });
                 } else {
                     // Réactiver les cases si la limite globale n'est pas atteinte
-                    if (totalMaxSelect > 0) {
-                        console.log("check");
-                        // Parcourir chaque section
-                        Array.from(container.querySelectorAll('.section-container')).forEach(section => {
-                            // Récupérer uniquement les checkboxes de cette section
-                            const checkboxes = section.querySelectorAll('input[type="checkbox"]');
+                    Array.from(container.querySelectorAll('.section-container')).forEach((section, sectionIndex) => {
+                        const checkboxes = section.querySelectorAll('input[type="checkbox"]');
+                        const uncheckedCheckboxes = Array.from(checkboxes).filter(checkbox => !checkbox.checked);
 
-                            const uncheckedCheckboxes = Array.from(checkboxes).filter(checkbox => {
-                                return !checkbox.checked;
-                            });
-                            const checkedAllOptions = Array.from(checkboxes).filter(checkbox => {
-                                return checkbox.checked && checkbox.id.includes("-all-"); // Vérifie que l'action est "all"
-                            });
+                        // Obtenir les détails de la section actuelle
+                        const { checkedNormal, checkedAll, sectionSize } = details[sectionIndex];
+                        const sectionCheckedCount = checkedAll.length > 0 ? sectionSize : checkedNormal.length;
+                        const sectionMaxSelect = sections[sectionIndex].maxSelect || Infinity; // Limite max de la section
 
-                            const allCheckbox = Array.from(checkboxes).filter(checkbox => {
-                                return checkbox.id.includes("-all-"); // Vérifie que l'action est "all"
-                            }); // Trouve la checkbox "all"
-
-                            // Réactiver toutes les cases de cette section
-                            if (checkedAllOptions.length === 0) {
-                                checkboxes.forEach(checkbox => {
-                                    checkbox.disabled = false;
-                                });
-                                if (allCheckbox[0] && totalChecked + uncheckedCheckboxes.length - 1 > totalMaxSelect) {
-                                    console.log("disable all");
-                                    allCheckbox[0].disabled = true;
-                                    let errorSpan = allCheckbox[0].parentElement.querySelector('.error-message');
-                                    if (!errorSpan) {
-                                        errorSpan = document.createElement('span');
-                                        errorSpan.classList.add('error-message');
-                                        errorSpan.textContent = "Trop de cases cochées pour cocher celle-ci";
-                                        errorSpan.style.color = 'red';
-                                        errorSpan.style.marginLeft = '10px'; // Espace à gauche de la checkbox
-                                        allCheckbox[0].parentElement.appendChild(errorSpan);
-                                    }
-                                } else {
-                                    // Supprimez le message d'erreur si la checkbox est réactivée
-                                    const errorSpan = allCheckbox[0].parentElement.querySelector('.error-message');
-                                    if (errorSpan) {
-                                        errorSpan.remove();
-                                    }
+                        if (sectionCheckedCount >= sectionMaxSelect) {
+                            // Désactiver les cases non cochées si la limite de la section est atteinte
+                            checkboxes.forEach(checkbox => {
+                                if (!checkbox.checked) {
+                                    checkbox.disabled = true;
                                 }
+                            });
+                        } else {
+                            // Réactiver les cases de la section si la limite de la section n'est pas atteinte
+                            checkboxes.forEach(checkbox => {
+                                checkbox.disabled = false;
+                            });
+                        }
+
+                        // Gérer les messages d'erreur pour les cases "-all-" uniquement
+                        checkboxes.forEach(checkbox => {
+                            const isAllCheckbox = checkbox.id.includes("-all-");
+                            const errorSpan = checkbox.parentElement.querySelector('.error-message');
+
+                            if (isAllCheckbox && totalChecked + sectionSize - checkedNormal.length > totalMaxSelect) {
+                                if (!errorSpan) {
+                                    const span = document.createElement('span');
+                                    span.classList.add('error-message');
+                                    span.textContent = "Trop de cases cochées pour cocher celle-ci";
+                                    span.style.color = 'red';
+                                    span.style.marginLeft= '10px'; // Espace en haut
+                                    span.style.display = 'block'; // Forcer à apparaître sous la case
+                                    checkbox.parentElement.appendChild(span);
+                                }
+                                checkbox.disabled = true;
                             } else {
-                                console.log("number of checkboxes", checkboxes.length);
+                                // Supprimer le message d'erreur si la checkbox devient réactivable
+                                if (errorSpan) {
+                                    errorSpan.remove();
+                                }
                             }
                         });
-                    }
+                    });
                 }
             };
+
+
 
             // Vérifier que sections est un tableau
             if (!Array.isArray(sections)) {
@@ -206,6 +206,8 @@ export const MultiSelect = {
                             const allCheckboxes = sectionDiv.querySelectorAll('input[type="checkbox"]');
                             const checkedCount = Array.from(allCheckboxes).filter(checkbox => checkbox.checked).length;
 
+                            //console.log(maxSelect)
+
                             if (option.action === 'all' && input.checked) {
                                 // Désactiver et décocher toutes les autres cases dans cette section
                                 allCheckboxes.forEach(checkbox => {
@@ -219,7 +221,7 @@ export const MultiSelect = {
                                 allCheckboxes.forEach(checkbox => {
                                     checkbox.disabled = false;
                                 });
-                            } else if (checkedCount >= maxSelect && totalMaxSelect === 0) {
+                            } else if (checkedCount >= maxSelect) {
                                 // Limitation par maxSelect dans cette section
                                 allCheckboxes.forEach(checkbox => {
                                     if (!checkbox.checked) {
@@ -298,8 +300,6 @@ export const MultiSelect = {
                             selections: selectedOptions,
                             path: button.path, // Récupérer le path du bouton
                         };
-
-                        console.log(`Bouton "${button.text}" cliqué, sélections envoyées`);
 
                         // Masquer tous les boutons dans ce conteneur
                         const currentContainer = container.querySelector(`[data-index="${index}"]`);
