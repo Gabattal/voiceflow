@@ -93,7 +93,7 @@ export const FileUpload = {
                 });
 
                 try {
-                    const response = await fetch('http://4.233.217.81:443/documents_upload/', {
+                    const response = await fetch('https://chatinnov-api-dev.proudsky-cdf9333b.francecentral.azurecontainerapps.io/documents_upload/', {
                         method: 'POST',
                         body: formData
                     });
