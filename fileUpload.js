@@ -62,9 +62,9 @@ export const FileUpload = {
                     }
                 </style>
                 <div class="upload-container">
-                    <input type="file" class="upload-input" id="${uniqueId}">
+                    <input type="file" class="upload-input" id="${uniqueId}" multiple>
                     <label for="${uniqueId}" class="upload-label">
-                        Cliquer pour téléverser ou glisser-déposer un fichier
+                        Cliquer pour téléverser ou glisser-déposer des fichiers
                     </label>
                 </div>
                 <div class="status-container"></div>
@@ -80,51 +80,56 @@ export const FileUpload = {
                 statusContainer.style.display = 'block';
             };
 
-            const handleUpload = async (file) => {
-                if (!file) return;
+            const handleUpload = async (files) => {
+                if (!files || files.length === 0) {
+                  return;
+                }
 
-                showStatus('Téléversement en cours...', 'loading');
+                showStatus(`Téléversement de ${files.length} fichier(s) en cours...`, 'loading');
 
                 const formData = new FormData();
-                formData.append('file', file);
+                Array.from(files).forEach((file) => {
+                    formData.append('files', file);
+                });
 
                 try {
                     const response = await fetch('https://chatinnov-api-dev.proudsky-cdf9333b.francecentral.azurecontainerapps.io/documents_upload/', {
                         method: 'POST',
-                        headers: {
-                            'accept': 'application/json'
-                        },
                         body: formData
                     });
 
-                    if (response.status === 200) {
-                        const data = await response.json();
-                        console.log('Document téléversé:', data);
+                    const data = await response.json();
+                    console.log('Upload response:', data);
 
-                        if (data.url) {
-                            statusContainer.innerHTML = `Téléversement réussi!`;
+                    if (response.ok) {
+                        if (data.urls && data.urls.length > 0) {
+                            const fileCount = data.urls.length;
+                            // Create a list of uploaded files with their links
+                            const fileList = data.urls.map(fileData => 
+                                `<div>${fileData.filename}: <a href="${fileData.url}" class="file-link" target="_blank">${fileData.url}</a></div>`
+                            ).join('');
+                            
+                            statusContainer.innerHTML = `<div>Téléversement réussi de ${fileCount} fichier(s)!</div>`;
                             statusContainer.className = 'status-container success';
 
-                            // Send the completion event with the url
                             window.voiceflow.chat.interact({
                                 type: 'complete',
                                 payload: JSON.stringify({
                                     success: true,
-                                    url: data.url
+                                    urls: data.urls
                                 }),
                             });
+                        } else {
+                            throw new Error('Aucune URL retournée par le serveur');
                         }
-                    } else if (response.status === 500) {
-                        throw new Error('Document upload failed');
                     } else {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Upload failed');
+                        const errorMessage = data.detail || 'Échec du téléversement';
+                        throw new Error(errorMessage);
                     }
                 } catch (error) {
                     console.error('Upload error:', error);
-                    showStatus(`Error: ${error.message}`, 'error');
+                    showStatus(`Erreur: ${error.message}`, 'error');
 
-                    // Send the completion event with the error
                     window.voiceflow.chat.interact({
                         type: 'complete',
                         payload: JSON.stringify({
@@ -137,25 +142,33 @@ export const FileUpload = {
 
             // Handle file select
             uploadInput.addEventListener('change', (event) => {
-                handleUpload(event.target.files[0]);
+                handleUpload(event.target.files);
             });
 
             // Handle drag and drop
+            uploadContainer.addEventListener('dragenter', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                uploadContainer.style.borderColor = '#2e7ff1';
+            });
+
             uploadContainer.addEventListener('dragover', (event) => {
                 event.preventDefault();
+                event.stopPropagation();
                 uploadContainer.style.borderColor = '#2e7ff1';
             });
 
             uploadContainer.addEventListener('dragleave', (event) => {
                 event.preventDefault();
+                event.stopPropagation();
                 uploadContainer.style.borderColor = '#ccc';
             });
 
             uploadContainer.addEventListener('drop', (event) => {
                 event.preventDefault();
+                event.stopPropagation();
                 uploadContainer.style.borderColor = '#ccc';
-                const file = event.dataTransfer.files[0];
-                handleUpload(file);
+                handleUpload(event.dataTransfer.files);
             });
 
             element.appendChild(container);
