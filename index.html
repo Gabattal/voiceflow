@@ -9,23 +9,27 @@
 <body>
 <h1>Test Voiceflow Chat avec Extensions</h1>
 <script type="module">
-    // import { MultiSelect } from './multiSelect.js';
+    import {MultiSelect} from './multiSelect.js';
     // import { FileUpload } from './fileUpload.js';
-    import { MultiSelect } from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow/multiSelect.js';
-    import { FileUpload } from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow/fileUpload.js';
-    (function(d, t) {
+    //import {FetchData} from './fetchData.js';
+    //import { MultiSelect } from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow/multiSelect.js';
+    import {FileUpload} from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow/fileUpload.js';
+    import { FetchData } from 'https://cdn.jsdelivr.net/gh/Gabattal/voiceflow@latest/fetchData.js';
+    (function (d, t) {
         var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-        v.onload = function() {
+        v.onload = function () {
             window.voiceflow.chat.load({
-                verify: { projectID: '672e11893551fb09b4fc0d16' },
+                verify: {projectID: '6735b122412b5300442e224f'},
                 url: 'https://general-runtime.voiceflow.com',
                 versionID: 'production',
                 assistant: {
-                    extensions: [MultiSelect, FileUpload],
+                    extensions: [MultiSelect,FetchData],
                 }
             });
         }
-        v.src = "https://cdn.voiceflow.com/widget/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+        v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
+        v.type = "text/javascript";
+        s.parentNode.insertBefore(v, s);
     })(document, 'script');
 </script>
 </body>

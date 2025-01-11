@@ -1,4 +1,4 @@
-export const FetchDataWidget = {
+export const FetchData = {
     name: 'FetchData',
     type: 'response',
     match: ({ trace }) => {
@@ -6,26 +6,24 @@ export const FetchDataWidget = {
         return trace.payload && trace.type === 'fetch_data';
     },
     render: async ({ trace }) => {
+        console.log('Trace:', trace);
         try {
             // Récupérer le payload passé depuis Voiceflow
-            const { prompt_name, inputs, llm, temperature, endpoint, headers } = trace.payload;
-
+            const { prompt_name, inputs, llm, temperature, endpoint, headers, token } = trace.payload;
+            console.log('Trace:', trace);
+            console.log('Payload:', trace.payload);
             // Construire le payload pour l'API
             const payload = {
-                prompt_name: prompt_name || "test_gabriel",
+                prompt_name: prompt_name,
                 inputs: inputs || { "question": "Combien il y a d'''habitants en France ?" },
                 llm: llm || 'gpt-4o',
                 temperature: temperature || 0,
-                'x-token': 'cCDqMrGbeymxfs3GgSPN9pTnECoiJASdg#B4!k7r',
+                'x-token': token,
             };
 
             console.log('Payload envoyé à l’API:', payload);
 
-            // Faire un fetch vers l'endpoint fourni dans le payload
-            const targetUrl = 'https://chatinnov-api-dev--0000047.proudsky-cdf9333b.francecentral.azurecontainerapps.io/generic/langsmith/run_prompt';
-
-            const proxifiedUrl = targetUrl;
-            const response = await fetch(proxifiedUrl, {
+            const response = await fetch(endpoint , {
                 method: 'POST',
                 headers: {
                     accept: 'application/json',
@@ -40,25 +38,24 @@ export const FetchDataWidget = {
             }
 
             const responseBody = await response.json();
+            const jsonPayload = {
+                response: responseBody.response,
+            };
             console.log('Réponse brute de l’API:', responseBody);
 
             // Retourner la réponse pour Voiceflow
-            return {
-                status: 'success',
-                outputVars: {
-                    apiResponse: responseBody, // La réponse brute
-                },
-            };
+            window.voiceflow.chat.interact({
+                type: 'complete',
+                payload: JSON.stringify(jsonPayload),
+            });
         } catch (error) {
             console.error('Erreur lors de l’appel API:', error);
 
             // Retourner une erreur
-            return {
-                status: 'error',
-                outputVars: {
-                    errorMessage: error.message,
-                },
-            };
+            window.voiceflow.chat.interact({
+                type: 'error',
+                payload: "Erreur lors de l’appel API",
+            });
         }
     },
 };
