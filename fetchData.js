@@ -23,8 +23,7 @@ export const FetchData = {
 
             console.log('Payload envoyé à l’API:', payload);
 
-            const corsProxy = 'https://cors-anywhere.herokuapp.com/';
-            const response = await fetch(`${corsProxy}${endpoint}`, {
+            const response = await fetch(endpoint , {
                 method: 'POST',
                 headers: {
                     accept: 'application/json',
