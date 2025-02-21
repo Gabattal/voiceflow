@@ -73,7 +73,7 @@ export const MultiSelect = {
                         const sectionCheckedCount = checkedAll.length > 0 ? sectionSize : checkedNormal.length;
                         const sectionMaxSelect = sections[sectionIndex].maxSelect || Infinity; // Limite max de la section
 
-                        if (sectionCheckedCount >= sectionMaxSelect) {
+                        if (sectionCheckedCount >= sectionMaxSelect || checkedAll.length > 0) {
                             // Désactiver les cases non cochées si la limite de la section est atteinte
                             checkboxes.forEach(checkbox => {
                                 if (!checkbox.checked) {
@@ -193,9 +193,9 @@ export const MultiSelect = {
                                 type="${multiselect ? 'checkbox' : 'radio'}" 
                                 style="display: ${multiselect ? 'block' : 'none'}" 
                                 name="option-${index}" 
-                                id="${section.label}-${option.name}-${sectionIndex}" 
+                                id="${section.label}-${option.name}-${option.action}-${section.id}" 
                             />
-                            <label for="${section.label}-${option.name}-${sectionIndex}">${option.name}</label>
+                            <label for="${section.label}-${option.name}-${option.action}-${section.id}">${option.name}</label>
                         `;
 
                         const input = optionDiv.querySelector(`input[type="${multiselect ? 'checkbox' : 'radio'}"]`);
