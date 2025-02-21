@@ -14,7 +14,7 @@ export const MultiSelect = {
                 textColor = '#0000FF',
                 backgroundOpacity = 0.3,
                 index = 1,
-                totalMaxSelect = 0,
+                totalMaxSelect = 10000,
                 multiselect = true,
             } = trace.payload;
 
