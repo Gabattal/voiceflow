@@ -14,7 +14,7 @@ export const MultiSelect = {
                 textColor = '#0000FF',
                 backgroundOpacity = 0.3,
                 index = 1,
-                totalMaxSelect = 10000,
+                totalMaxSelect = 6,
                 multiselect = true,
             } = trace.payload;
 
@@ -92,7 +92,7 @@ export const MultiSelect = {
                             const isAllCheckbox = checkbox.id.includes("-all-");
                             const errorSpan = checkbox.parentElement.querySelector('.error-message');
 
-                            if (isAllCheckbox && totalChecked + sectionSize - checkedNormal.length > totalMaxSelect) {
+                            if (isAllCheckbox && totalChecked + sectionSize - checkedNormal.length > totalMaxSelect && !checkbox.checked) {
                                 if (!errorSpan) {
                                     const span = document.createElement('span');
                                     span.classList.add('error-message');
